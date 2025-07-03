@@ -1,3 +1,23 @@
+console.log("main.js cargado al 100%");  // Al principio del archivo
+
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("DOM totalmente cargado");
+  // ...resto del código
+  inicializarGrafico(); // Esta línea ya está, déjala
+});
+
+function inicializarGrafico() {
+  console.log("inicializarGrafico() llamada");
+  // ...el resto de la función...
+  setInterval(() => agregarDatoSimulado(), 2000);
+}
+
+function agregarDatoSimulado() {
+  console.log("agregarDatoSimulado() ejecutado");
+  // ...el resto de la función...
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
   // --- Menú hamburguesa, navegación
   const hamburger = document.getElementById("hamburger");
