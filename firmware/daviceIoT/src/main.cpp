@@ -11,6 +11,9 @@
 #include "sensores.hpp"
 #include "actuadores.hpp"
 
+// Declaración anticipada
+String obtenerFechaHora();
+
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
@@ -22,7 +25,7 @@ bool flagReinicioPendiente = false;
 String motivoReinicio = "";
 
 void guardarEstadoSPIFFS() {
-  StaticJsonDocument<128> doc;
+  DynamicJsonDocument doc(128);
   estado = getEstadoReles();
   doc["rele1"] = estado.rele1;
   doc["rele2"] = estado.rele2;
@@ -36,7 +39,7 @@ void cargarEstadoSPIFFS() {
   if (!SPIFFS.exists(FILE_STATE)) return;
   File f = SPIFFS.open(FILE_STATE, FILE_READ);
   if (!f) return;
-  StaticJsonDocument<128> doc;
+  DynamicJsonDocument doc(128);
   deserializeJson(doc, f);
   estado.rele1 = doc["rele1"] | false;
   estado.rele2 = doc["rele2"] | false;
@@ -47,7 +50,7 @@ void cargarEstadoSPIFFS() {
 
 void reportarEventoReinicio(String motivo) {
   // 1. MQTT Evento
-  StaticJsonDocument<192> evt;
+  DynamicJsonDocument evt(192);
   evt["motivo"] = motivo;
   evt["fecha"] = obtenerFechaHora();
   evt["dispositivo"] = DEVICE_ID;
@@ -98,7 +101,7 @@ void enviarDatosBackend() {
 void publicarDatosMQTT() {
   sens = leerSensores();
   estado = getEstadoReles();
-  StaticJsonDocument<256> doc;
+  DynamicJsonDocument doc(256);
   doc["temperatura"] = sens.temperatura;
   doc["humedad"] = sens.humedad;
   doc["rele1"] = estado.rele1;
@@ -111,16 +114,16 @@ void publicarDatosMQTT() {
 
 // CALLBACK: Control remoto y reinicio remoto
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  StaticJsonDocument<192> doc;
+  DynamicJsonDocument doc(192);
   DeserializationError err = deserializeJson(doc, payload, length);
   if (err) return;
-  if (doc.containsKey("rele1")) {
+  if (doc["rele1"].is<bool>()) {
     setRelay(1, doc["rele1"]);
   }
-  if (doc.containsKey("rele2")) {
+  if (doc["rele2"].is<bool>()) {
     setRelay(2, doc["rele2"]);
   }
-  if (doc.containsKey("reinicio") && doc["reinicio"]) {
+  if (doc["reinicio"].is<bool>() && doc["reinicio"]) {
     motivoReinicio = "Reinicio remoto";
     flagReinicioPendiente = true;
   }
