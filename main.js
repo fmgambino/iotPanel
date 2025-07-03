@@ -155,13 +155,19 @@ function actualizaBoton(id, isOn) {
 }
 
 // ----------- GRÁFICO ALEATORIO -----------
-let chart;
-const MAX_PUNTOS = 20; // Número de puntos visibles
+let chart; // Global
+
 function inicializarGrafico() {
   const canvas = document.getElementById('chart');
   const fechaInput = document.getElementById('fecha');
   if (!canvas || !fechaInput) return;
   const ctx = canvas.getContext('2d');
+
+  // <<<--- AGREGADO: Destruye el gráfico anterior si existe
+  if (chart) {
+    chart.destroy();
+  }
+
   chart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -198,9 +204,9 @@ function inicializarGrafico() {
   fechaInput.addEventListener('change', () => cargarDatosSimulados(fechaInput.value));
   cargarDatosSimulados(hoy);
 
-  // Simula la llegada de nuevos datos cada 2 segundos
   setInterval(() => agregarDatoSimulado(), 2000);
 }
+
 
 function agregarDatoSimulado() {
   if (!chart) return;
