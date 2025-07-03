@@ -87,7 +87,7 @@ En este taller práctico, **desarrollarás desde cero un sistema completo**:
 🔹 **Cloná este repositorio:**
 ```bash
 git clone https://github.com/tu_usuario/tu_repositorio
-
+```
 
 ### 🔹 Firmware (ESP32)
 
