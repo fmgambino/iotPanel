@@ -1,24 +1,14 @@
-console.log("main.js cargado al 100%");  // Al principio del archivo
+console.log("main.js cargado al 100%");
+
+let chart;
+let intervalId;
+const MAX_PUNTOS = 1000; // Guarda todos los del día
+let datosDia = []; // {label, temp, hum}
+let fechaActual = ""; // Para evitar duplicar datos cuando cambia la fecha
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM totalmente cargado");
-  // ...resto del código
-  inicializarGrafico(); // Esta línea ya está, déjala
-});
 
-function inicializarGrafico() {
-  console.log("inicializarGrafico() llamada");
-  // ...el resto de la función...
-  setInterval(() => agregarDatoSimulado(), 2000);
-}
-
-function agregarDatoSimulado() {
-  console.log("agregarDatoSimulado() ejecutado");
-  // ...el resto de la función...
-}
-
-
-document.addEventListener("DOMContentLoaded", () => {
   // --- Menú hamburguesa, navegación
   const hamburger = document.getElementById("hamburger");
   const navLinks = document.getElementById("nav-links");
@@ -154,21 +144,31 @@ function actualizaBoton(id, isOn) {
   else     { btn.classList.remove('on'); btn.classList.add('off'); }
 }
 
-// ----------- GRÁFICO ALEATORIO -----------
-let chart; // Global variable for Chart.js
-const MAX_PUNTOS = 20; // Número de puntos visibles
+// ----------- GRÁFICO INTERACTIVO -----------
 
 function inicializarGrafico() {
   const canvas = document.getElementById('chart');
   const fechaInput = document.getElementById('fecha');
   if (!canvas || !fechaInput) return;
-  const ctx = canvas.getContext('2d');
 
-  // <<<--- AGREGADO: Destruye el gráfico anterior si existe
+  // Destruye el gráfico anterior si existe
   if (chart) {
     chart.destroy();
   }
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
 
+  // Define hoy como fecha por defecto
+  const hoy = new Date().toISOString().split('T')[0];
+  fechaActual = hoy;
+  fechaInput.value = hoy;
+
+  // Limpia datos del día
+  datosDia = [];
+
+  // Configuración del gráfico
+  const ctx = canvas.getContext('2d');
   chart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -179,65 +179,117 @@ function inicializarGrafico() {
           data: [],
           borderColor: 'orange',
           borderWidth: 2,
-          tension: 0.3
+          tension: 0.3,
+          pointRadius: 0,
         },
         {
           label: 'Humedad (%)',
           data: [],
           borderColor: 'cyan',
           borderWidth: 2,
-          tension: 0.3
+          tension: 0.3,
+          pointRadius: 0,
         }
       ]
     },
     options: {
       responsive: true,
-      plugins: { legend: { labels: { color: "#fff" } } },
+      plugins: {
+        legend: { labels: { color: "#fff" } },
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'x',
+            modifierKey: 'ctrl',
+            onPanComplete: function({chart}) {
+              // Puedes poner aquí lógica extra si quieres
+            }
+          },
+          zoom: {
+            wheel: { enabled: false },
+            pinch: { enabled: false },
+            mode: 'x'
+          }
+        },
+        tooltip: {
+          enabled: true
+        }
+      },
       scales: {
-        x: { ticks: { color: "#fff" }, grid: { color: "#333" } },
-        y: { ticks: { color: "#fff" }, grid: { color: "#333" }, beginAtZero: false }
+        x: { 
+          ticks: { color: "#fff" }, 
+          grid: { color: "#333" }
+        },
+        y: { 
+          ticks: { color: "#fff" }, 
+          grid: { color: "#333" }, 
+          beginAtZero: false 
+        }
       }
     }
   });
 
-  const hoy = new Date().toISOString().split('T')[0];
-  fechaInput.value = hoy;
-  fechaInput.addEventListener('change', () => cargarDatosSimulados(fechaInput.value));
-  cargarDatosSimulados(hoy);
+  // Cambiar fecha
+  fechaInput.addEventListener('change', () => {
+    mostrarDatosDeFecha(fechaInput.value);
+  });
 
-  setInterval(() => agregarDatoSimulado(), 2000);
+  mostrarDatosDeFecha(hoy); // Inicia con hoy
+
+  // Simula la llegada de nuevos datos cada 2 segundos
+  intervalId = setInterval(() => agregarDatoSimulado(), 2000);
 }
-
 
 function agregarDatoSimulado() {
   if (!chart) return;
 
+  // Crea una marca de tiempo única
   const ahora = new Date();
-  const label = ahora.toLocaleTimeString().slice(0, 8); // HH:MM:SS
-  const temp = Math.random() * 10 + 20; // Temperatura simulada
-  const hum = Math.random() * 30 + 50; // Humedad simulada
+  const hoy = ahora.toISOString().split('T')[0];
 
-  // Agrega los datos
-  chart.data.labels.push(label);
-  chart.data.datasets[0].data.push(temp);
-  chart.data.datasets[1].data.push(hum);
-
-  // Si hay más de MAX_PUNTOS, elimina el más antiguo
-  if (chart.data.labels.length > MAX_PUNTOS) {
-    chart.data.labels.shift();
-    chart.data.datasets[0].data.shift();
-    chart.data.datasets[1].data.shift();
+  if (fechaActual !== hoy) {
+    // Si cambió el día, reinicia todo
+    fechaActual = hoy;
+    datosDia = [];
+    chart.data.labels = [];
+    chart.data.datasets[0].data = [];
+    chart.data.datasets[1].data = [];
+    chart.update();
   }
 
+  const label = ahora.toLocaleTimeString().slice(0, 8); // HH:MM:SS
+  const temp = Math.random() * 10 + 20;
+  const hum = Math.random() * 30 + 50;
+
+  // Guarda el dato
+  datosDia.push({ label, temp, hum });
+  if (datosDia.length > MAX_PUNTOS) datosDia.shift();
+
+  // Muestra solo los últimos 20 puntos al inicio,
+  // pero puedes panear hacia la izquierda con el plugin
+  const mostrar = datosDia.slice(-20);
+
+  chart.data.labels = mostrar.map(d => d.label);
+  chart.data.datasets[0].data = mostrar.map(d => d.temp);
+  chart.data.datasets[1].data = mostrar.map(d => d.hum);
   chart.update();
 }
 
-function cargarDatosSimulados(fecha) {
-  if (!chart) return;
-  // Limpia los datos actuales
-  chart.data.labels = [];
-  chart.data.datasets[0].data = [];
-  chart.data.datasets[1].data = [];
+function mostrarDatosDeFecha(fecha) {
+  // Si la fecha no es hoy, rellena con datos simulados vacíos
+  if (fecha !== fechaActual) {
+    chart.data.labels = [];
+    chart.data.datasets[0].data = [];
+    chart.data.datasets[1].data = [];
+    chart.update();
+    return;
+  }
+
+  // Muestra la ventana móvil de los últimos 20 puntos, pero con pan puedes ver más
+  const mostrar = datosDia.slice(-20);
+  chart.data.labels = mostrar.map(d => d.label);
+  chart.data.datasets[0].data = mostrar.map(d => d.temp);
+  chart.data.datasets[1].data = mostrar.map(d => d.hum);
   chart.update();
 }
 
