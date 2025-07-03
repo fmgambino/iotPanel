@@ -155,7 +155,8 @@ function actualizaBoton(id, isOn) {
 }
 
 // ----------- GRÁFICO ALEATORIO -----------
-let chart; // Global
+let chart; // Global variable for Chart.js
+const MAX_PUNTOS = 20; // Número de puntos visibles
 
 function inicializarGrafico() {
   const canvas = document.getElementById('chart');
