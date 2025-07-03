@@ -136,6 +136,7 @@ function actualizaBoton(id, isOn) {
 
 // ----------- GRÁFICO ALEATORIO -----------
 let chart;
+const MAX_PUNTOS = 20; // Número de puntos visibles
 function inicializarGrafico() {
   const canvas = document.getElementById('chart');
   const fechaInput = document.getElementById('fecha');
@@ -146,8 +147,20 @@ function inicializarGrafico() {
     data: {
       labels: [],
       datasets: [
-        { label: 'Temperatura (°C)', data: [], borderColor: 'orange', borderWidth: 2, tension: 0.3 },
-        { label: 'Humedad (%)', data: [], borderColor: 'cyan', borderWidth: 2, tension: 0.3 }
+        {
+          label: 'Temperatura (°C)',
+          data: [],
+          borderColor: 'orange',
+          borderWidth: 2,
+          tension: 0.3
+        },
+        {
+          label: 'Humedad (%)',
+          data: [],
+          borderColor: 'cyan',
+          borderWidth: 2,
+          tension: 0.3
+        }
       ]
     },
     options: {
@@ -159,21 +172,45 @@ function inicializarGrafico() {
       }
     }
   });
+
   const hoy = new Date().toISOString().split('T')[0];
   fechaInput.value = hoy;
   fechaInput.addEventListener('change', () => cargarDatosSimulados(fechaInput.value));
   cargarDatosSimulados(hoy);
+
+  // Simula la llegada de nuevos datos cada 2 segundos
+  setInterval(() => agregarDatoSimulado(), 2000);
 }
-function cargarDatosSimulados(fecha) {
-  const labels = [], temp = [], hum = [];
-  for (let h = 0; h < 24; h++) {
-    labels.push(`${h.toString().padStart(2, '0')}:00`);
-    temp.push((22 + Math.random() * 6).toFixed(1));
-    hum.push((50 + Math.random() * 12).toFixed(1));
+
+function agregarDatoSimulado() {
+  if (!chart) return;
+
+  const ahora = new Date();
+  const label = ahora.toLocaleTimeString().slice(0, 8); // HH:MM:SS
+  const temp = Math.random() * 10 + 20; // Temperatura simulada
+  const hum = Math.random() * 30 + 50; // Humedad simulada
+
+  // Agrega los datos
+  chart.data.labels.push(label);
+  chart.data.datasets[0].data.push(temp);
+  chart.data.datasets[1].data.push(hum);
+
+  // Si hay más de MAX_PUNTOS, elimina el más antiguo
+  if (chart.data.labels.length > MAX_PUNTOS) {
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+    chart.data.datasets[1].data.shift();
   }
-  chart.data.labels = labels;
-  chart.data.datasets[0].data = temp;
-  chart.data.datasets[1].data = hum;
+
+  chart.update();
+}
+
+function cargarDatosSimulados(fecha) {
+  if (!chart) return;
+  // Limpia los datos actuales
+  chart.data.labels = [];
+  chart.data.datasets[0].data = [];
+  chart.data.datasets[1].data = [];
   chart.update();
 }
 
