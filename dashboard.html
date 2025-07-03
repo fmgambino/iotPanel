@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - Electrónica Gambino</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Remixicon para iconos -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css">
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <img src="https://electronicagambino.com/wp-content/uploads/2023/05/cropped-Electronica-Gambino-e1684335474114-1320x388.png" 
+           alt="Electrónica Gambino" class="logo" />
+      <select id="device-selector" class="device-selector">
+        <option value="esp32-1">ESP32 - Oficina</option>
+        <option value="esp32-2">ESP32 - Laboratorio</option>
+      </select>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menú">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav class="nav-links" id="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="device.html">Device</a>
+      <a href="profile.html">Perfil</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Dashboard</h2>
+    <div class="panel-header">
+      <span class="icon-btn" id="show-reboots" title="Ver reinicios"><i class="ri-history-line"></i></span>
+      <span class="icon-btn" id="do-reboot" title="Reiniciar dispositivo"><i class="ri-restart-line"></i></span>
+    </div>
+
+    <div class="sensor">
+      <div class="data-box">
+        <span class="icon">🌡️</span>
+        <span id="temp">-- °C</span>
+      </div>
+      <div class="data-box">
+        <span class="icon">💧</span>
+        <span id="hum">-- %</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="btn1" class="lamp off">💡 Lámpara 1</button>
+      <button id="btn2" class="lamp off">💡 Lámpara 2</button>
+    </div>
+
+    <div class="graph-controls">
+      <label for="fecha">Filtrar por fecha:</label>
+      <input type="date" id="fecha" />
+    </div>
+    <canvas id="chart" width="400" height="200"></canvas>
+  </main>
+
+  <!-- Modal de reinicios -->
+  <div id="reboot-modal" class="modal-bg">
+    <div class="modal">
+      <h3>Historial de Reinicios</h3>
+      <ul id="reboot-list"></ul>
+      <button id="close-modal">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Tu archivo principal de JS -->
+  <script src="main.js"></script>
+</body>
+</html>
